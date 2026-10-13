@@ -1,0 +1,63 @@
+<main class="page">
+  <header class="entete">
+    <img src="logo.png" alt="Your Car Your Way" width="72" height="72">
+    <div>
+      <h1>Support client</h1>
+      <p class="sous-titre">Preuve de concept du tchat · choisissez un compte de démonstration</p>
+    </div>
+  </header>
+
+  @if (chargement()) {
+    <p class="etat" role="status">Chargement des comptes…</p>
+  } @else if (erreur()) {
+    <div class="alerte" role="alert">
+      <p>{{ erreur() }}</p>
+      <button type="button" class="bouton" (click)="charger()">Réessayer</button>
+    </div>
+  } @else {
+    <div class="colonnes">
+      <section aria-labelledby="titre-clients">
+        <h2 id="titre-clients">Clients</h2>
+        <p class="aide">Ouvrent une demande et échangent avec un conseiller.</p>
+        <ul class="comptes">
+          @for (compte of clients(); track compte.id) {
+            <li>
+              <button type="button" class="compte" (click)="choisir(compte)">
+                <span class="avatar" aria-hidden="true" [style.background]="couleurAvatar(compte.id)">{{ initiales(compte.nom) }}</span>
+                <span class="texte">
+                  <span class="nom">{{ compte.nom }}</span>
+                  <span class="detail">{{ compte.detail }}</span>
+                </span>
+              </button>
+            </li>
+          }
+        </ul>
+      </section>
+
+      <section aria-labelledby="titre-conseillers">
+        <h2 id="titre-conseillers">Conseillers</h2>
+        <p class="aide">Traitent la file d'attente depuis la console.</p>
+        <ul class="comptes">
+          @for (compte of conseillers(); track compte.id) {
+            <li>
+              <button type="button" class="compte" (click)="choisir(compte)">
+                <span class="avatar carre" aria-hidden="true" [style.background]="couleurAvatar(compte.id)">{{ initiales(compte.nom) }}</span>
+                <span class="texte">
+                  <span class="nom">{{ compte.nom }}</span>
+                  <span class="detail">{{ compte.detail }}</span>
+                </span>
+              </button>
+            </li>
+          }
+        </ul>
+      </section>
+    </div>
+
+    <aside class="note">
+      <strong>Astuce :</strong> chaque onglet garde sa propre session. Ouvrez un onglet « client » et un onglet
+      « conseiller » côte à côte pour voir les messages arriver en temps réel.
+      <br>
+      <strong>Sécurité :</strong> pas de mot de passe dans la preuve de concept ; la cible utilise Keycloak (OpenID Connect, MFA).
+    </aside>
+  }
+</main>

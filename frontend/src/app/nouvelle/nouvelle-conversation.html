@@ -1,0 +1,45 @@
+<section class="carte" aria-labelledby="titre-nouvelle">
+  <h2 id="titre-nouvelle">Nouvelle demande</h2>
+  <p class="intro">Un conseiller vous répond par écrit dans cette fenêtre. Les champs marqués d'un astérisque (*) sont obligatoires.</p>
+
+  <form (submit)="$event.preventDefault(); envoyer()" novalidate>
+    <div class="champ">
+      <label for="sujet">Sujet *</label>
+      <select id="sujet" #premierChamp (change)="sujet.set(valeur($event))">
+        @for (s of sujets; track s) {
+          <option [value]="s" [selected]="s === sujet()">{{ s }}</option>
+        }
+      </select>
+    </div>
+
+    <div class="champ">
+      <label for="reservation">Référence de réservation (facultatif)</label>
+      <input id="reservation" type="text" autocomplete="off" placeholder="YCYW-2026-004512" maxlength="20"
+             aria-describedby="aide-reservation" [attr.aria-invalid]="tentative() && !reservationValide()"
+             (input)="reservation.set(valeur($event))">
+      <p id="aide-reservation" class="aide" [class.erreur]="tentative() && !reservationValide()">
+        @if (tentative() && !reservationValide()) {
+          Format attendu : YCYW-année-6 chiffres, par exemple YCYW-2026-004512.
+        } @else {
+          Le conseiller verra directement votre réservation.
+        }
+      </p>
+    </div>
+
+    <div class="champ">
+      <label for="message">Votre message *</label>
+      <textarea id="message" rows="5" maxlength="2000" aria-describedby="aide-message"
+                [attr.aria-invalid]="tentative() && !messageValide()" (input)="message.set(valeur($event))"></textarea>
+      <p id="aide-message" class="aide" [class.erreur]="tentative() && !messageValide()">
+        @if (tentative() && !messageValide()) { Le message est obligatoire. } @else { {{ message().length }} / 2000 caractères }
+      </p>
+    </div>
+
+    <div class="boutons">
+      <button type="button" class="bouton discret" (click)="annulee.emit()">Annuler</button>
+      <button type="submit" class="bouton principal" [disabled]="envoiEnCours()">
+        {{ envoiEnCours() ? 'Envoi…' : 'Envoyer la demande' }}
+      </button>
+    </div>
+  </form>
+</section>

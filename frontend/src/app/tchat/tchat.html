@@ -1,0 +1,128 @@
+<div class="application">
+  <header class="barre">
+    <img src="logo.png" alt="Your Car Your Way" class="logo" width="40" height="40">
+    <div class="titre-app">
+      <span class="produit">Support client</span>
+      <span class="espace">{{ store.estConseiller() ? 'Console conseiller' : 'Mon espace' }}</span>
+    </div>
+
+    <div class="etat-connexion" role="status">
+      <span class="voyant" [class.actif]="store.connecte()" aria-hidden="true"></span>
+      <span>{{ store.connecte() ? 'En ligne' : 'Reconnexion…' }}</span>
+      @if (store.instance(); as instance) {
+        <span class="instance" title="Instance du backend qui porte votre connexion WebSocket">· {{ instance }}</span>
+      }
+    </div>
+
+    <div class="utilisateur">
+      <span class="avatar petit" aria-hidden="true" [style.background]="couleurAvatar(store.moi().id)">{{ initiales(store.moi().nom) }}</span>
+      <span class="nom-utilisateur">{{ store.moi().nom }}</span>
+      <button type="button" class="bouton discret" (click)="deconnexion()">Déconnexion</button>
+    </div>
+  </header>
+
+  @if (store.erreur(); as erreur) {
+    <div class="bandeau-erreur" role="alert">
+      <span>{{ erreur }}</span>
+      <button type="button" class="bouton discret" (click)="store.erreur.set(null)">Fermer</button>
+    </div>
+  }
+
+  <div class="corps" [class.vue-fil]="afficheFil()">
+    <aside class="panneau-liste" aria-labelledby="titre-liste">
+      <div class="entete-liste">
+        <h1 id="titre-liste">{{ store.estConseiller() ? 'Conversations' : 'Mes conversations' }}</h1>
+        @if (!store.estConseiller()) {
+          <button type="button" class="bouton principal" (click)="demarrerNouvelleDemande()">Nouvelle demande</button>
+        }
+      </div>
+
+      @if (store.estConseiller()) {
+        <div class="onglets" role="group" aria-label="Filtrer les conversations">
+          <button type="button" [attr.aria-pressed]="onglet() === 'file'" (click)="onglet.set('file')">
+            File d'attente <span class="compteur" [class.alerte]="file().length > 0">{{ file().length }}</span>
+          </button>
+          <button type="button" [attr.aria-pressed]="onglet() === 'miennes'" (click)="onglet.set('miennes')">
+            Mes conversations <span class="compteur">{{ miennes().length }}</span>
+          </button>
+          <button type="button" [attr.aria-pressed]="onglet() === 'historique'" (click)="onglet.set('historique')">
+            Historique
+          </button>
+        </div>
+      }
+
+      @if (store.chargement()) {
+        <p class="vide" role="status">Chargement…</p>
+      } @else {
+        <ul class="liste" role="list">
+          @for (c of liste(); track c.id) {
+            <li>
+              <button type="button" class="element" [class.selectionne]="c.id === store.selection()"
+                      [attr.aria-current]="c.id === store.selection() ? 'true' : null" (click)="ouvrir(c.id)">
+                <span class="avatar" aria-hidden="true"
+                      [style.background]="couleurAvatar(store.estConseiller() ? c.clientId : c.conseillerId)">
+                  {{ c.statut === 'EN_ATTENTE' && !store.estConseiller() ? '…' : initiales(interlocuteur(c)) }}
+                </span>
+                <span class="contenu">
+                  <span class="ligne">
+                    <span class="interlocuteur">{{ interlocuteur(c) }}</span>
+                    <span class="heure">{{ horodatageCourt(c.derniereActiviteLe) }}</span>
+                  </span>
+                  <span class="ligne">
+                    <span class="sujet">{{ c.sujet }}</span>
+                    <span class="badge" [attr.data-statut]="c.statut">{{ libelles[c.statut] }}</span>
+                  </span>
+                  <span class="ligne">
+                    <span class="apercu">
+                      @if (c.dernierAuteur === store.moi().role) { <span class="vous">Vous : </span> }
+                      {{ c.dernierMessage }}
+                    </span>
+                    @if (store.nonLus(c.id) > 0) {
+                      <span class="pastille">{{ store.nonLus(c.id) }}<span class="sr-only"> non lu(s)</span></span>
+                    }
+                  </span>
+                  @if (store.estConseiller() && c.statut === 'EN_ATTENTE') {
+                    <span class="attente">Attend depuis {{ dureeDepuis(c.ouverteLe, store.maintenant()) }}
+                      @if (c.clientJuridiction) { · {{ c.clientJuridiction }} } · {{ c.langue }}</span>
+                  }
+                </span>
+              </button>
+            </li>
+          } @empty {
+            <li class="vide">
+              @if (store.estConseiller()) {
+                @switch (onglet()) {
+                  @case ('file') { Aucun client en attente. }
+                  @case ('miennes') { Prenez une conversation dans la file d'attente. }
+                  @default { Aucune conversation dans l'historique. }
+                }
+              } @else {
+                Aucune conversation pour le moment.
+              }
+            </li>
+          }
+        </ul>
+      }
+    </aside>
+
+    <main class="panneau-fil">
+      @if (nouvelleDemande()) {
+        <app-nouvelle-conversation (terminee)="nouvelleDemande.set(false)" (annulee)="retourALaListe()" />
+      } @else if (store.conversationActive()) {
+        <app-fil-discussion (retour)="retourALaListe()" (nouvelleDemande)="demarrerNouvelleDemande()" />
+      } @else {
+        <div class="accueil">
+          <img src="logo.png" alt="" width="96" height="96">
+          @if (store.estConseiller()) {
+            <h2>Bonjour {{ store.moi().nom }}</h2>
+            <p>{{ file().length }} client(s) en attente. Choisissez une conversation dans la file pour la prendre en charge.</p>
+          } @else {
+            <h2>Comment pouvons-nous vous aider ?</h2>
+            <p>Nos conseillers répondent par écrit, en temps réel, 7 jours sur 7 de 8 h à 22 h (heure locale de votre agence).</p>
+            <button type="button" class="bouton principal" (click)="demarrerNouvelleDemande()">Écrire au service client</button>
+          }
+        </div>
+      }
+    </main>
+  </div>
+</div>

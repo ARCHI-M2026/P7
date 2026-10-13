@@ -1,0 +1,76 @@
+# Your Car Your Way - PoC tchat
+name: ycyw-tchat
+
+services:
+
+  db:
+    build:
+      context: ./db
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-ycyw}
+      POSTGRES_USER: ${POSTGRES_USER:-ycyw}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-ycyw}
+    volumes:
+      - donnees-db:/var/lib/postgresql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+    restart: unless-stopped
+
+  rabbitmq:
+    build:
+      context: ./rabbitmq
+    environment:
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER:-ycyw}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD:-ycyw}
+    ports:
+      - "${RABBITMQ_UI_PORT:-15672}:15672"   # console d'administration 
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "check_port_connectivity"]
+      interval: 10s
+      timeout: 10s
+      start_period: 20s
+      retries: 12
+    restart: unless-stopped
+
+  backend:
+    build:
+      context: ./backend
+    environment:
+      DB_URL: jdbc:postgresql://db:5432/${POSTGRES_DB:-ycyw}
+      DB_USER: ${POSTGRES_USER:-ycyw}
+      DB_PASSWORD: ${POSTGRES_PASSWORD:-ycyw}
+      STOMP_RELAIS_ACTIF: "true"
+      STOMP_RELAIS_HOTE: rabbitmq
+      STOMP_RELAIS_PORT: "61613"
+      STOMP_RELAIS_LOGIN: ${RABBITMQ_USER:-ycyw}
+      STOMP_RELAIS_MOT_DE_PASSE: ${RABBITMQ_PASSWORD:-ycyw}
+    deploy:
+      replicas: 2        # deux instances : démontre le relais RabbitMQ entre instances
+    depends_on:
+      db:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "bash -c 'exec 3<>/dev/tcp/127.0.0.1/8080' || exit 1"]
+      interval: 5s
+      timeout: 3s
+      start_period: 60s
+      retries: 30
+    restart: unless-stopped
+
+  frontend:
+    build:
+      context: ./frontend
+    ports:
+      - "${FRONT_PORT:-8080}:80"
+    depends_on:
+      backend:
+        condition: service_healthy
+    restart: unless-stopped
+
+volumes:
+  donnees-db:

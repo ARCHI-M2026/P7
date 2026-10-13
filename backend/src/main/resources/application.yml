@@ -1,0 +1,45 @@
+spring:
+  application:
+    name: ycyw-tchat
+  datasource:
+    url: ${DB_URL:jdbc:postgresql://localhost:5432/ycyw}
+    username: ${DB_USER:ycyw}
+    password: ${DB_PASSWORD:ycyw}
+  jpa:
+    open-in-view: false
+    hibernate:
+      # Le schéma est créé par les scripts d'initialisation de la base (db/init) : Hibernate ne le modifie pas.
+      ddl-auto: none
+  mvc:
+    problemdetails:
+      enabled: true
+  modulith:
+    events:
+      jdbc:
+        # La table event_publication (outbox) est créée par db/init/03-modulith.sql.
+        schema-initialization:
+          enabled: false
+
+app:
+  stomp:
+    relais:
+      # false : courtier en mémoire (une seule instance) ; true : relais RabbitMQ (multi-instance)
+      actif: ${STOMP_RELAIS_ACTIF:false}
+      hote: ${STOMP_RELAIS_HOTE:localhost}
+      port: ${STOMP_RELAIS_PORT:61613}
+      login: ${STOMP_RELAIS_LOGIN:guest}
+      mot-de-passe: ${STOMP_RELAIS_MOT_DE_PASSE:guest}
+
+server:
+  port: 8080
+  shutdown: graceful
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+
+logging:
+  level:
+    com.yourcaryourway: INFO

@@ -1,0 +1,289 @@
+:host {
+  display: block;
+  height: 100dvh;
+}
+
+.application {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ---------- barre supérieure */
+.barre {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.5rem 1rem;
+  background: var(--marine);
+  color: #fff;
+}
+
+.logo {
+  border-radius: 0.5rem;
+  background: #fff;
+}
+
+.titre-app {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.2;
+}
+
+.produit {
+  font-weight: 700;
+}
+
+.espace {
+  font-size: 0.8125rem;
+  color: #c9d6ec;
+}
+
+.etat-connexion {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  font-size: 0.8125rem;
+  color: #dce4f2;
+}
+
+.voyant {
+  width: 0.625rem;
+  height: 0.625rem;
+  border-radius: 50%;
+  background: #f0a35e;
+}
+
+.voyant.actif {
+  background: #4cd07d;
+}
+
+.instance {
+  font-family: ui-monospace, monospace;
+  font-size: 0.75rem;
+}
+
+.utilisateur {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.utilisateur .bouton.discret {
+  color: #fff;
+  border-color: rgb(255 255 255 / 40%);
+}
+
+.bandeau-erreur {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.5rem 1rem;
+  background: #fbe6e3;
+  color: #8e2416;
+  border-bottom: 1px solid #f2b8ae;
+}
+
+/* ---------- deux panneaux */
+.corps {
+  flex: 1;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: minmax(19rem, 24rem) 1fr;
+}
+
+.panneau-liste {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  border-right: 1px solid var(--bordure);
+  background: var(--surface);
+}
+
+.entete-liste {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  padding: 1rem 1rem 0.75rem;
+}
+
+.entete-liste h1 {
+  margin: 0;
+  font-size: 1.25rem;
+  color: var(--marine);
+}
+
+.onglets {
+  display: flex;
+  gap: 0.25rem;
+  padding: 0 0.75rem 0.5rem;
+  border-bottom: 1px solid var(--bordure);
+}
+
+.onglets button {
+  flex: 1;
+  padding: 0.5rem 0.25rem;
+  border: none;
+  border-bottom: 3px solid transparent;
+  background: none;
+  font: inherit;
+  font-size: 0.875rem;
+  color: var(--texte-doux);
+  cursor: pointer;
+}
+
+.onglets button[aria-pressed='true'] {
+  color: var(--bleu);
+  font-weight: 600;
+  border-bottom-color: var(--bleu);
+}
+
+.compteur {
+  display: inline-block;
+  min-width: 1.4em;
+  padding: 0 0.35em;
+  border-radius: 1em;
+  background: var(--fond);
+  font-size: 0.75rem;
+}
+
+.compteur.alerte {
+  background: var(--orange);
+  color: #fff;
+}
+
+.liste {
+  flex: 1;
+  overflow-y: auto;
+  list-style: none;
+  margin: 0;
+  padding: 0.25rem 0;
+}
+
+.element {
+  width: 100%;
+  display: flex;
+  gap: 0.75rem;
+  padding: 0.75rem 1rem;
+  border: none;
+  border-left: 4px solid transparent;
+  background: none;
+  text-align: left;
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
+}
+
+.element:hover {
+  background: var(--fond);
+}
+
+.element.selectionne {
+  background: var(--bleu-pale);
+  border-left-color: var(--bleu);
+}
+
+.contenu {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+}
+
+.ligne {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.interlocuteur {
+  font-weight: 600;
+}
+
+.heure,
+.attente {
+  font-size: 0.75rem;
+  color: var(--texte-doux);
+}
+
+.sujet {
+  font-size: 0.875rem;
+  color: var(--marine);
+}
+
+.apercu {
+  font-size: 0.875rem;
+  color: var(--texte-doux);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.vous {
+  font-weight: 600;
+}
+
+.pastille {
+  flex-shrink: 0;
+  min-width: 1.4rem;
+  padding: 0.1rem 0.4rem;
+  border-radius: 1rem;
+  background: var(--orange);
+  color: #fff;
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-align: center;
+}
+
+.vide {
+  padding: 1.5rem 1rem;
+  color: var(--texte-doux);
+}
+
+.panneau-fil {
+  min-height: 0;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  background: var(--fond);
+}
+
+.accueil {
+  margin: auto;
+  max-width: 28rem;
+  padding: 2rem;
+  text-align: center;
+}
+
+.accueil img {
+  border-radius: 1.25rem;
+  background: #fff;
+  box-shadow: var(--ombre);
+}
+
+.accueil h2 {
+  color: var(--marine);
+}
+
+/* ---------- mobile : un seul panneau à la fois */
+@media (max-width: 52rem) {
+  .corps {
+    grid-template-columns: 1fr;
+  }
+
+  .corps.vue-fil .panneau-liste,
+  .corps:not(.vue-fil) .panneau-fil {
+    display: none;
+  }
+
+  .nom-utilisateur,
+  .instance,
+  .espace {
+    display: none;
+  }
+}

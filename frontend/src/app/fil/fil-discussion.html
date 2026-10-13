@@ -1,0 +1,118 @@
+@let c = conversation();
+
+<header class="entete-fil">
+  <button type="button" class="bouton discret retour" (click)="retour.emit()" aria-label="Retour à la liste des conversations">←</button>
+  <span class="avatar" aria-hidden="true" [style.background]="couleurAvatar(idAvatar())">
+    {{ c.statut === 'EN_ATTENTE' && !estConseiller() ? '…' : initiales(titre()) }}
+  </span>
+  <div class="identite">
+    <h2>{{ titre() }}</h2>
+    <p>
+      {{ c.sujet }}
+      <span class="badge" [attr.data-statut]="c.statut">{{ libelles[c.statut] }}</span>
+    </p>
+  </div>
+  <div class="actions">
+    <button type="button" class="bouton discret" (click)="telechargerTranscription()">Transcription</button>
+    @if (c.statut !== 'CLOSE' && (!estConseiller() || c.conseillerId === store.moi().id)) {
+      <button type="button" class="bouton discret danger" (click)="clore()">Clore</button>
+    }
+  </div>
+</header>
+
+<div class="fiche">
+  @if (c.reservationRef) { <span class="puce">Réservation {{ c.reservationRef }}</span> }
+  @if (estConseiller()) {
+    @if (c.clientJuridiction) { <span class="puce">Juridiction {{ c.clientJuridiction }}</span> }
+    <span class="puce">Langue {{ c.langue }}</span>
+    @if (c.conseillerNom && c.conseillerId !== store.moi().id) { <span class="puce">Suivie par {{ c.conseillerNom }}</span> }
+  }
+</div>
+
+@if (!estConseiller() && c.statut === 'EN_ATTENTE') {
+  <div class="bandeau-attente" role="status">
+    @if (c.positionFile; as position) {
+      <strong>Vous êtes n° {{ position }} dans la file d'attente.</strong>
+      Temps d'attente estimé : {{ estimationAttente(position) }}. Vous pouvez continuer à écrire.
+    } @else {
+      <strong>Votre demande est enregistrée.</strong> Un conseiller va vous répondre.
+    }
+  </div>
+}
+
+<div class="zone-messages" #zoneMessages (scroll)="surDefilement()" tabindex="0" aria-label="Historique des messages">
+  @if (store.messagesActifs() === null) {
+    <p class="chargement" role="status">Chargement des messages…</p>
+  } @else {
+    <ol class="messages" role="log" aria-live="polite" aria-relevant="additions" aria-label="Messages de la conversation">
+      @for (ligne of lignes(); track ligne.message.id) {
+        @if (ligne.jour) {
+          <li class="jour" aria-hidden="true"><span>{{ ligne.jour }}</span></li>
+        }
+        @if (ligne.message.typeAuteur === 'SYSTEME') {
+          <li class="systeme"><span>{{ ligne.message.contenu }} · {{ heure(ligne.message.envoyeLe) }}</span></li>
+        } @else {
+          <li class="message" [class.de-moi]="ligne.deMoi" [class.debut]="ligne.debutGroupe">
+            @if (!ligne.deMoi) {
+              <span class="avatar mini" aria-hidden="true" [class.cache]="!ligne.debutGroupe"
+                    [style.background]="couleurAvatar(ligne.message.auteurId)">{{ initiales(ligne.message.auteurNom) }}</span>
+            }
+            <div class="bulle" [attr.data-etat]="ligne.message.etat">
+              @if (ligne.debutGroupe && !ligne.deMoi) {
+                <span class="auteur">{{ ligne.message.auteurNom }}</span>
+              }
+              <span class="sr-only">{{ ligne.deMoi ? 'Vous' : ligne.message.auteurNom }}, {{ heure(ligne.message.envoyeLe) }} :</span>
+              <p class="texte">{{ ligne.message.contenu }}</p>
+              <span class="meta">
+                <span aria-hidden="true">{{ heure(ligne.message.envoyeLe) }}</span>
+                @if (ligne.deMoi) {
+                  <span class="coches" [attr.data-lu]="ligne.message.luLe ? 'oui' : 'non'" [attr.title]="etatLecture(ligne.message)">
+                    @switch (ligne.message.etat) {
+                      @case ('envoi') { <span aria-hidden="true">◷</span> }
+                      @case ('echec') { <span aria-hidden="true">!</span> }
+                      @default { <span aria-hidden="true">{{ ligne.message.luLe ? '✓✓' : '✓' }}</span> }
+                    }
+                    <span class="sr-only">{{ etatLecture(ligne.message) }}</span>
+                  </span>
+                }
+              </span>
+              @if (ligne.message.etat === 'echec') {
+                <button type="button" class="reessayer" (click)="store.reessayer(ligne.message)">Réessayer</button>
+              }
+            </div>
+          </li>
+        }
+      }
+    </ol>
+  }
+
+  @if (store.saisieActive(); as nom) {
+    <div class="saisie" aria-hidden="true">
+      <span class="points"><span></span><span></span><span></span></span>
+      {{ nom }} écrit…
+    </div>
+  }
+</div>
+
+<footer class="composeur">
+  @if (c.statut === 'CLOSE') {
+    <p class="information">Cette conversation est close.</p>
+    @if (!estConseiller()) {
+      <button type="button" class="bouton principal" (click)="nouvelleDemande.emit()">Nouvelle demande</button>
+    }
+  } @else if (estConseiller() && c.statut === 'EN_ATTENTE') {
+    <p class="information">{{ c.clientNom }} attend une réponse.</p>
+    <button type="button" class="bouton principal" (click)="prendreEnCharge()">Prendre en charge</button>
+  } @else if (!peutEcrire()) {
+    <p class="information">Conversation suivie par {{ c.conseillerNom }} : lecture seule.</p>
+  } @else {
+    <form class="saisie-message" (submit)="$event.preventDefault(); envoyer()">
+      <label for="champ-message" class="sr-only">Votre message</label>
+      <textarea id="champ-message" #champ rows="1" maxlength="2000" placeholder="Écrivez votre message…"
+                aria-describedby="aide-envoi" (input)="surSaisie($event)"
+                (keydown)="surTouche($event)" (blur)="store.signalerSaisie(false)"></textarea>
+      <button type="submit" class="bouton principal envoyer" [disabled]="!texte().trim()">Envoyer</button>
+    </form>
+    <p id="aide-envoi" class="aide">Entrée pour envoyer · Maj + Entrée pour aller à la ligne</p>
+  }
+</footer>
